@@ -22,7 +22,7 @@ import java.net.SocketTimeoutException;
 import java.net.InetAddress;
 /**
  *
- * @author ogaz
+ * @author Michelle Bowman, Sara Ogaz
  */
 public class EchoServer {
     

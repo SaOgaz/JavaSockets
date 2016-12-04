@@ -22,7 +22,7 @@ import java.net.SocketTimeoutException;
 import java.net.InetAddress;
 /**
  *
- * @author Michelle Bowman, Sara Ogaz
+ * @author Michelle Bowman, Anne Frederick, Valentina Hyman, Sara Ogaz, Laurel Valenti
  */
 public class EchoServer {
     
@@ -30,8 +30,8 @@ public class EchoServer {
     
         public static void main(String[] args) throws IOException{          
             //adjust depending on machine, filename
-            String filename = "/Users/ogaz/NetBeansProjects/JavaSockets/src/javasockets/filename.txt";
-            int portNumber = 21252;
+            String filename = "/Users/ogaz/NetBeansProjects/JavaSockets/src/javasockets/stestfile.txt";
+            int portNumbert = 21252;
             int remainder;
             int full_packets=0;
             DatagramPacket[] outbuffer=null;
@@ -58,63 +58,94 @@ public class EchoServer {
             
                        
             
-            //setup file stream and Datagram buffer           
-            try{
-                FileInputStream  fileinputstream = new FileInputStream(filename);
-                long fsize = fileinputstream.getChannel().size();              
-                InputStream buff = new FileInputStream("filename.txt");
-                
-                remainder = (int) fsize % M;
-                full_packets = (int) fsize / M;
-                outbuffer = new DatagramPacket[full_packets+1];
-                
-                
-                // first x number of full packets
-                for(int i=0; i<full_packets; i++){
-                    byte[] bytes = new byte[M+2];
-                    buff.read(bytes, 0, M);
-                    bytes[M] = (byte) S;
-                    bytes[M=1] = (byte) i;  
-                    DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost(), portNumber);
-                    outbuffer[i] = pack;                   
-                }
-                
-                
-                // last datagram
-                byte[] bytes = new byte[remainder + 2];
-                buff.read(bytes, 0, remainder);                
-                bytes[remainder] = (byte) S;
-                bytes[remainder+1] = (byte) remainder;                   
-                DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost(), portNumber);
-                outbuffer[M] = pack;  
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();    
-            } 
-            
                                     
             
             try {
                 ServerSocket serverSocket = 
-                    new ServerSocket (portNumber);// Use 21252 as port number.
-                Socket clientSocket = serverSocket.accept();
-                PrintWriter out =
-                    new PrintWriter(clientSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(
-                    new InputStreamReader(clientSocket.getInputStream()));
+                    new ServerSocket (portNumbert);// Use 21252 as port number.
+                while(true){
+                    Socket clientSocket = serverSocket.accept();
+                
+                    PrintWriter out =
+                        new PrintWriter(clientSocket.getOutputStream(), true);
+                    BufferedReader in = new BufferedReader(
+                        new InputStreamReader(clientSocket.getInputStream()));
   
-                //When server gets hello message, it prints hello received and port number sent by client
-                String inline;
-                while ((inline = in.readLine()) != null) {
-                    System.out.println("Hello received.");
+                    //When server gets hello message, it prints hello received and port number sent by client
+                    String inline;
+                    inline = in.readLine();
+                    System.out.println("\n\nHello received.");
                     String udpPort = in.readLine(); // Read UDP port number from client.
                     int udpPortNumber = Integer.parseInt(udpPort);                
                     System.out.println("The UDP port number is " + udpPortNumber + ".");
+                    
+                    int Sint = (int) S;
+                    
+                    //setup file stream and Datagram buffer           
+                    try{
+                        FileInputStream  fileinputstream = new FileInputStream(filename);
+                        long fsize = fileinputstream.getChannel().size(); 
+                        
+                        InputStream buff = new FileInputStream(filename);
+                
+                        remainder = (int) fsize % M;
+                        full_packets = (int) fsize / M;
+                        outbuffer = new DatagramPacket[full_packets+1];
+                
+                        int seq_tracker = 0;
+                
+                        // first x number of full packets
+                        for(int i=0; i<full_packets; i++){
+                            byte[] bytes = new byte[M+8];
+                            buff.read(bytes, 0, M);                                                        
+                            
+                            bytes[0+M] = (byte) ((Sint >> 24) & 0xFF);
+                            bytes[1+M] = (byte) ((Sint >> 16) & 0xFF);
+                            bytes[2+M] = (byte) ((Sint >> 8) & 0xFF);
+                            bytes[3+M] = (byte) (Sint & 0xFF);                               
+                            
+                            
+                                                        
+                            bytes[4+M] = (byte) ((i >> 24) & 0xFF);
+                            bytes[5+M] = (byte) ((i >> 16) & 0xFF);
+                            bytes[6+M] = (byte) ((i >> 8) & 0xFF);
+                            bytes[7+M] = (byte) (i & 0xFF);
+                            
+                            DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost(), udpPortNumber);
+                            outbuffer[i] = pack;
+                            seq_tracker=i;
+                        }
+
+                        seq_tracker = seq_tracker+1;
+                        
+                        // last datagram
+                        byte[] bytes = new byte[remainder + 8];
+                        buff.read(bytes, 0, remainder);  
+                        
+                        bytes[0+remainder] = (byte) ((Sint >> 24) & 0xFF);
+                        bytes[1+remainder] = (byte) ((Sint >> 16) & 0xFF);
+                        bytes[2+remainder] = (byte) ((Sint >> 8) & 0xFF);
+                        bytes[3+remainder] = (byte) (Sint & 0xFF);    
+                        
+                        bytes[4+remainder] = (byte) ((seq_tracker >> 24) & 0xFF);
+                        bytes[5+remainder] = (byte) ((seq_tracker >> 16) & 0xFF);
+                        bytes[6+remainder] = (byte) ((seq_tracker >> 8) & 0xFF);
+                        bytes[7+remainder] = (byte) (seq_tracker & 0xFF);
+                        
+                                          
+                        DatagramPacket pack = new DatagramPacket(bytes, bytes.length, InetAddress.getLocalHost(), udpPortNumber);
+                        outbuffer[full_packets] = pack;  
+                    } catch (FileNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();    
+                    }                                                           
+                    
+                    
                     UDPthing newUDP = new UDPthing(T,udpPortNumber,full_packets, outbuffer);           
                 }                              
             } catch (IOException e) {
                 System.out.println("Exception caught when trying to listen on port "
-                    + portNumber + " or listening for a connection");
+                    + portNumbert + " or listening for a connection");
                 System.out.println(e.getMessage());
             }
                                                                                                     
@@ -127,21 +158,25 @@ public class EchoServer {
 class UDPthing {
                 
             
-        UDPthing(int T, int portnumber, int full_packets, DatagramPacket[] outbuffer) throws IOException{
+        UDPthing(int T, int sportnumber, int full_packets, DatagramPacket[] outbuffer) throws IOException{
             
-            int myportnumber = portnumber+1;
+            int myportnumber = sportnumber+1;
             int okTimer = T;
             
-            if (portnumber == 65535){
+            if (sportnumber == 65535){
                 myportnumber = 25000;
             }
                                                
             //setup socket
+            String ok = "OK";
+            byte[] ok_arr = ok.getBytes();
+            DatagramPacket myAck = new DatagramPacket(ok_arr, ok_arr.length, InetAddress.getLocalHost(), sportnumber);
+                        
             try{
                 DatagramSocket mySock = new DatagramSocket(myportnumber);
                 for(int i=0; i< full_packets+1; i++){
                     DatagramPacket packet = outbuffer[i];
-                    mySock.send(packet);  
+                    mySock.send(packet); 
                 }
                 mySock.setSoTimeout(T);
                 
@@ -149,21 +184,18 @@ class UDPthing {
                     byte[] incoming = new byte[256];
                     DatagramPacket gack = new DatagramPacket(incoming, incoming.length);
                     try {
+                        //recieve first ack
                         mySock.receive(gack);
-                        System.out.print(String.valueOf(portnumber));
-                        System.out.print("\nOK\n");
+                        System.out.println(String.valueOf(sportnumber)+": OK");
                         
                         //sending ok message
-                        String ok = "OK";
-                        byte[] ok_arr = ok.getBytes();
-                        DatagramPacket myAck = new DatagramPacket(ok_arr, ok_arr.length, InetAddress.getLocalHost(), portnumber);
                         mySock.send(myAck);
+                        mySock.setSoTimeout(okTimer);
                         break;
 
                     } 
                     catch (SocketTimeoutException e) {   
-                        System.out.print(String.valueOf(portnumber));
-                        System.out.print("\nresending\n");                                    
+                        System.out.println(String.valueOf(sportnumber)+": resending");                                
                             
                         for(int i=0; i< full_packets+1; i++){
                             DatagramPacket packet = outbuffer[i];
@@ -175,34 +207,27 @@ class UDPthing {
                         continue;                                                 
                     }
                 }                               
-                
-                
-                mySock.setSoTimeout(okTimer);  
-                
+                                                                           
+                 
                 while (true) {
-                    byte[] incoming = new byte[256];
-                    DatagramPacket gack = new DatagramPacket(incoming, incoming.length);
                     try {
+                        //recieve second ack
+                        byte[] incoming = new byte[256];
+                        DatagramPacket gack = new DatagramPacket(incoming, incoming.length);
                         mySock.receive(gack);
-                    }catch (SocketTimeoutException e){
-                        okTimer = 2*okTimer;  
-                        System.out.print(String.valueOf(portnumber));
-                        System.out.print("\nOK timed out, restarting timer\n");
+                        System.out.println(String.valueOf(sportnumber)+": Dublicate ACK recieved");
+                        okTimer = okTimer * 2;
+                        mySock.send(myAck);
                         mySock.setSoTimeout(okTimer);
-                        continue;
+                        //loop back to beginning
+                        
+                        
+                    } catch (SocketTimeoutException e){
+                        System.out.print(String.valueOf(sportnumber)+": Done");
+                        mySock.close();
+                        break;
                     }
                     
-                    try {
-                        mySock.receive(gack);
-                        System.out.print(String.valueOf(portnumber));
-                        System.out.print("\nDuplicate ACK recieved\n");
-                        okTimer = okTimer * 2;                                               
-                    } catch (SocketTimeoutException e){
-                        System.out.print(String.valueOf(portnumber));
-                        System.out.print("\nDone\n");
-                        mySock.close();
-                    }
-                    mySock.setSoTimeout(okTimer);
                 }
                                                                                                                   
                                                 

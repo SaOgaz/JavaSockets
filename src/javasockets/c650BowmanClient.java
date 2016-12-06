@@ -5,9 +5,9 @@ import java.util.*;
 
 /**
  *
- * @author Anne
+ * Michelle Bowman, Anne Frederick, Valentina Hyman, Sara Ogaz, Laurel Valenti
  */
-public class Client {
+public class c650BowmanClient {
 
     /**
      * @param args the command line arguments
@@ -18,7 +18,7 @@ public class Client {
         int packetNum;//last int in byte[] packet; the num of the packet
         byte[][] packetsBuffered = new byte[8192][8192];
         //the file being written to by the client
-        String outputfile = "/Users/ogaz/NetBeansProjects/JavaSockets/src/javasockets/testtestfile.txt";
+        String outputfile = "c:/c650projf16/ctestfile";
         int fileSum = 0;//the number of bytes received by the client so far
         int packet_counter = 0;
         
@@ -56,7 +56,7 @@ public class Client {
             Arrays.fill(used, false);
             
             do{
-                //receive a packet from server on portReceive; returns byte[] to packetReceived[]
+                //receive a packet from server; returns byte[] to packetReceived[]
                 dpack = udpClient.receivePacket(sSocket);                
                 packetReceived = dpack.getData();
                 
@@ -231,8 +231,6 @@ public class Client {
                 }
             //return the byte[]
             return receivePacket;    
-        }
-            
-    
+        }                
     }
 }

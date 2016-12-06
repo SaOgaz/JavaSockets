@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 import java.util.Scanner;
 import java.io.PrintWriter;
@@ -24,13 +19,13 @@ import java.net.InetAddress;
  *
  * @author Michelle Bowman, Anne Frederick, Valentina Hyman, Sara Ogaz, Laurel Valenti
  */
-public class EchoServer {
+public class c650BowmanServer {
     
        
     
         public static void main(String[] args) throws IOException{          
             //adjust depending on machine, filename
-            String filename = "/Users/ogaz/NetBeansProjects/JavaSockets/src/javasockets/stestfile.txt";
+            String filename = "c:/c650projf16/stestfile";
             int portNumbert = 21252;
             int remainder;
             int full_packets=0;
@@ -59,7 +54,8 @@ public class EchoServer {
                        
             
                                     
-            
+            //loop to accept tcp connections, starts UDP object at end of loop and
+            //listens for new clients indefinitly
             try {
                 ServerSocket serverSocket = 
                     new ServerSocket (portNumbert);// Use 21252 as port number.
@@ -140,15 +136,14 @@ public class EchoServer {
                         e.printStackTrace();    
                     }                                                           
                     
-                    
+                    //finally, initialize UDP object
                     UDPthing newUDP = new UDPthing(T,udpPortNumber,full_packets, outbuffer);           
                 }                              
             } catch (IOException e) {
                 System.out.println("Exception caught when trying to listen on port "
                     + portNumbert + " or listening for a connection");
                 System.out.println(e.getMessage());
-            }
-                                                                                                    
+            }                                                                                                    
         }
 }
         
@@ -173,6 +168,7 @@ class UDPthing {
             DatagramPacket myAck = new DatagramPacket(ok_arr, ok_arr.length, InetAddress.getLocalHost(), sportnumber);
                         
             try{
+                //send out file packets
                 DatagramSocket mySock = new DatagramSocket(myportnumber);
                 for(int i=0; i< full_packets+1; i++){
                     DatagramPacket packet = outbuffer[i];
@@ -194,7 +190,8 @@ class UDPthing {
                         break;
 
                     } 
-                    catch (SocketTimeoutException e) {   
+                    catch (SocketTimeoutException e) { 
+                        //if there's a time-out, re-send packets
                         System.out.println(String.valueOf(sportnumber)+": resending");                                
                             
                         for(int i=0; i< full_packets+1; i++){
@@ -215,7 +212,7 @@ class UDPthing {
                         byte[] incoming = new byte[256];
                         DatagramPacket gack = new DatagramPacket(incoming, incoming.length);
                         mySock.receive(gack);
-                        System.out.println(String.valueOf(sportnumber)+": Dublicate ACK recieved");
+                        System.out.println(String.valueOf(sportnumber)+": Duplicate ACK recieved");
                         okTimer = okTimer * 2;
                         mySock.send(myAck);
                         mySock.setSoTimeout(okTimer);
@@ -223,14 +220,11 @@ class UDPthing {
                         
                         
                     } catch (SocketTimeoutException e){
-                        System.out.print(String.valueOf(sportnumber)+": Done");
+                        System.out.println(String.valueOf(sportnumber)+": Done");
                         mySock.close();
                         break;
-                    }
-                    
-                }
-                                                                                                                  
-                                                
+                    }                    
+                }                                                                                                                                                                  
             } catch (SocketException ex){
                 ex.printStackTrace();
             }
